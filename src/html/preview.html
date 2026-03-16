@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Trimix Analyser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trimix Analyser">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; text-align: center; }
+    h1 { font-size: 28px; margin: 0; padding: 6px; background-color: #43B02A; color: #F6EB14; }
+    .small { font-size: 14px; color: #333; }
+    .system-row { display: flex; justify-content: space-between; padding: 2px 12px; }
+    .big-gas { font-size: 70px; font-weight: bold; margin-top: 4px; }
+    .voltage { font-size: 18px; margin-top: -2px; color: #444; }
+    .section-title { font-size: 18px; margin-top: 20px; }
+    .data-block { font-size: 16px; margin-top: 0px; }
+    .cal-block { font-size: 14px; margin-top: 0px; line-height: 1.4; }
+    button { padding: 8px 16px; margin-top: 4px; font-size: 16px; }
+  </style>
+</head>
+
+<body>
+  <h1>Trimix Analyser</h1>
+
+  <!-- System Data -->
+  <div class="system-row small">
+    <div><span id="time">0:00</span></div>
+    <div><span id="count">0</span> SPS</div>
+  </div>
+
+  <!-- Gas Quality -->
+  <div class="system-row small">
+    <div>VOC: <span id="voc">0</span></div>
+    <div><span id="sgpRawCorr">0</span> (32767-1)</div>
+  </div>
+
+  <!-- O2 / He Percentages -->
+  <div class="big-gas">
+    <span id="oxygen">0</span> / <span id="helium">0</span>
+  </div>
+  <div class="voltage">
+    O2: <span id="avgOxygenVoltage">0.0</span> mV |
+    He: <span id="correctedHeliumVoltage">0.0</span> mV
+  </div>
+
+  <!-- Gas Caluclation -->
+  <h2 class="section-title">Gas Caluclation</h2>
+  <div class="data-block">
+    MOD (ppO2 1.4): <span id="mod14">0</span> m<br>
+    MOD (ppO2 1.6): <span id="mod16">0</span> m<br>
+    END (@ 1.4 MOD): <span id="end">0</span> m<br>
+    Density (@ 1.4 MOD): <span id="density">0</span> g/L
+  </div>
+
+  <!-- Calibration Data -->
+  <h2 class="section-title">Calibration Data</h2>
+  <div class="cal-block">
+    Air O2 Cal Voltage: <span id="oxygencalVoltage">0.0</span> mV<br>
+    O2 Cal Percentage: <span id="oxygenCalPercentageText">0</span>%<br>
+    High O2 Cal Voltage: <span id="pureoxygenVoltage">0.0</span> mV<br>
+    He Cal Percentage: <span id="heliumCalPercentage">0</span>%<br>
+    He Cal Voltage: <span id="heliumcalVoltage">0.0</span> mV<br>
+    He Zero Position: <span id="bestWiperValue">0</span> / 128
+  </div>
+
+  <!-- Calibration Buttons -->
+  <div style="margin-top: 10px; display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+    <button onclick="calibrate('airOxygen')">Cal. Air O2</button>
+    <button onclick="calibrate('pureOxygen')">Cal. High O2</button>
+    <button onclick="calibrate('airHelium')">Cal. Air He</button>
+    <button onclick="calibrate('pureHelium')">Cal. High He</button>
+  </div>
+
+  <!-- Settings Button -->
+  <div style="margin-top: 40px; text-align: center;">
+    <button style="font-size: 18px; padding: 4px 10px;" onclick="window.location.href='/settings'">
+      Setting
+    </button>
+  </div>
+
+  <!-- Refresh Button -->
+  <div style="margin-top: 30px; text-align: center;">
+    <button style="font-size: 18px; padding: 4px 10px;" onclick="location.reload();">
+      Refresh
+    </button>
+  </div>
+
+
+  <script>
+    function calibrate(type) {
+      let url = "";
+      if (type === "airOxygen") url = "/calibrate_oxygen_air";
+      else if (type === "pureOxygen") url = "/calibrate_oxygen_pure";
+      else if (type === "airHelium")  url = "/calibrate_helium_zero";
+      else if (type === "pureHelium") url = "/calibrate_helium_pure";
+      else {
+        alert("Unknown calibration type");
+        return;
+      }
+      fetch(url)
+        .then(response => response.text())
+        .then(msg => {
+          alert(msg.replace(/<[^>]*>?/gm, ""));
+        })
+        .catch(error => {
+          console.error("Calibration error:", error);
+          alert("Calibration failed");
+        });
+    }
+
+    function resetCalibration() {
+      if (confirm("Reset calibration to default?")) {
+        fetch("/reset_calibration")
+          .then(() => {
+            alert("Rebooting...");
+          })
+      }
+    }
+    window.onload = function() {
+      setInterval(() => {
+        fetch("/data")
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById("time").textContent = data.time;
+            document.getElementById("count").textContent = data.count;
+            document.getElementById("oxygen").textContent = data.oxygen;
+            document.getElementById("avgOxygenVoltage").textContent = data.avgOxygenVoltage;
+            document.getElementById("helium").textContent = data.helium;
+            document.getElementById("correctedHeliumVoltage").textContent = data.correctedHeliumVoltage;
+            document.getElementById("mod14").textContent = data.mod14;
+            document.getElementById("mod16").textContent = data.mod16;
+            document.getElementById("end").textContent = data.end;
+            document.getElementById("density").textContent = data.density;
+            document.getElementById("voc").textContent = data.voc;
+            document.getElementById("sgpRawCorr").textContent = data.sgpRawCorr;
+            document.getElementById("oxygencalVoltage").textContent = data.oxygencalVoltage;
+            document.getElementById("oxygenCalPercentageText").textContent = data.OxygenCalPercentage;
+            document.getElementById("pureoxygenVoltage").textContent = data.pureoxygenVoltage;
+            document.getElementById("heliumCalPercentage").textContent = data.HeliumCalPercentage;
+            document.getElementById("heliumcalVoltage").textContent = data.heliumcalVoltage;
+            document.getElementById("bestWiperValue").textContent = data.bestWiperValue;
+          })
+          .catch(error => {
+            console.error("Error fetching /data:", error);
+          });
+      }, 500);
+    };
+  </script>
+</body>
+</html>
