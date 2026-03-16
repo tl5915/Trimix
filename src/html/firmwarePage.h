@@ -1,0 +1,79 @@
+#include <pgmspace.h>
+#pragma once
+
+const char firmwarePage[] PROGMEM = R"HTML(
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Firmware OTA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .progress-bar { width: 100%; background-color: #ddd; border-radius: 5px; overflow: hidden; margin-top: 10px; }
+    .progress { height: 20px; width: 0%; background-color: #4caf50; transition: width 0.4s; }
+  </style>
+</head>
+<body>
+  <h1>Firmware Update</h1>
+  <p style="font-size:16px; margin-bottom:12px;">
+    Current version: )rawliteral" TOSTRING(FIRMWARE_VERSION) R"rawliteral(
+  </p>
+  <form id="uploadForm" method="POST" action="/update" enctype="multipart/form-data" onsubmit="return checkFile();">
+    <input type="file" name="firmware" id="fileInput" accept=".bin" required>
+    <div class="progress-bar"><div class="progress" id="progress"></div></div>
+    <input type="submit" value="Upload">
+    <p id="uploadStatus"></p>
+  </form>
+  <p><a href="/">Back</a></p>
+
+  <script>
+    document.getElementById("fileInput").addEventListener("change", function() {
+      let fileName = this.files[0]?.name || "No file selected";
+      document.getElementById("uploadStatus").textContent = "Selected: " + fileName;
+    });
+    function checkFile() {
+      let fileInput = document.getElementById("fileInput");
+      let file = fileInput.files[0];
+      if (!file) {
+        alert("Select a bin file.");
+        return false;
+      }
+      if (file.name.split('.').pop().toLowerCase() !== "bin") {
+        alert("Invalid file type.");
+        return false;
+      }
+      if (file.size > 1800000) {
+        alert("File size exceeded 1.8 MB.");
+        return false;
+      }
+      uploadFirmware(file);
+      return false;
+    }
+    function uploadFirmware(file) {
+      let xhr = new XMLHttpRequest();
+      let formData = new FormData();
+      formData.append("firmware", file);
+
+      xhr.upload.onprogress = function(event) {
+        let percent = Math.round((event.loaded / event.total) * 100);
+        document.getElementById("progress").style.width = percent + "%";
+        document.getElementById("uploadStatus").textContent = "Uploading... " + percent + "%";
+      };
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          document.getElementById("uploadStatus").textContent = "Upload complete. Device rebooting...";
+        } else if (xhr.status === 413) {
+          document.getElementById("uploadStatus").textContent = "File too large! Upload failed.";
+        } else {
+          document.getElementById("uploadStatus").textContent = "Upload failed!";
+        }
+      };
+      xhr.onerror = function() {
+        document.getElementById("uploadStatus").textContent = "Upload error!";
+      };
+      xhr.open("POST", "/update", true);
+      xhr.send(formData);
+    }
+  </script> 
+</body>
+</html>
+)HTML";
