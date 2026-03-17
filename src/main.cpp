@@ -23,7 +23,7 @@
 #include "html/uploadPage.h"
 
 // Firmware Version
-#define FIRMWARE_VERSION 1.0.0
+#define FIRMWARE_VERSION 1.1
 #define STRINGIFY(x) #x
 #define TOSTRING(x)  STRINGIFY(x)
 
@@ -48,12 +48,12 @@ const int ADDR_PURE_OXYGEN_VOLTAGE = 24;
 const int ADDR_HELIUM_CAL_VOLTAGE = 32;
 
 // Calibration
-const uint8_t defaultwiperValue = 64;           // Potentiometer wiper position
+const uint8_t defaultwiperValue = 58;           // Potentiometer wiper position
 const uint8_t defaultOxygenCalPercentage = 99;  // Oxygen calibration percentage
 const uint8_t defaultHeliumCalPercentage = 99;  // Helium calibration percentage
-const float defaultOxygenCalVoltage = 10.0;     // Oxygen voltage in air
+const float defaultOxygenCalVoltage = 12.0;     // Oxygen voltage in air
 const float defaultPureOxygenVoltage = 0.0;     // Oxygen voltage in oxygen
-const float defaultHeliumCalVoltage = 550.0;    // Helium voltage in helium
+const float defaultHeliumCalVoltage = 620.0;    // Helium voltage in helium
 bool heliumPolarity = false;
 bool isTwoPointCalibrated = false;
 uint8_t wiperValue = defaultwiperValue;
