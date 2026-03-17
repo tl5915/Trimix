@@ -1,18 +1,19 @@
-// Libraries
+// OTA Libraries
 #include <FS.h>
-#include <WiFi.h>
-#include <Update.h>
-#include <EEPROM.h>
 #include <SPIFFS.h>
+#include <Update.h>
+// UI Libraries
+#include <WiFi.h>
 #include <esp_bt.h>
 #include <esp_wifi.h>
 #include <WebServer.h>
+// Peripheral Libraries
+#include <EEPROM.h>
 #include <Adafruit_DS3502.h>
 #include <Adafruit_ADS1X15.h>
 #include <sensirion_arch_config.h>
 #include <sensirion_voc_algorithm.h>
 #include <SparkFun_SGP40_Arduino_Library.h>
-
 // HTML pages
 #include "html/htmlPage.h"
 #include "html/settingsPage.h"
@@ -373,9 +374,9 @@ void setup() {
   Wire.setClock(400000);          // I2C clock speed 400 kHz
   EEPROM.begin(64);               // EEPROM start
   SPIFFS.begin(true);             // SPIFFS filesystem start
-  sgp40.begin();                  // SGP40 start, default 0X59
-  ds3502.begin();                 // DS3502 start, default 0X28
-  ads.begin(0x48);                // ADS1115 start, default 0X48
+  sgp40.begin();                  // SGP40 start, default 0x59
+  ds3502.begin();                 // DS3502 start, default 0x28
+  ads.begin(0x48);                // ADS1115 start, default 0x48
 
   // Load calibration values
   EEPROM.get(ADDR_HELIUM_POLARITY, heliumPolarity);
