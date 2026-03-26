@@ -87,8 +87,11 @@ float correctedHeliumVoltage = 0.0;
 float heliumPercentage = 0.0;
 uint16_t mod14 = 0;
 uint16_t mod16 = 0;
+uint16_t mod_cc = 0;
 uint16_t end = 0;
+uint16_t end_cc = 0;
 float den = 0.0;
+float den_cc = 0.0;
 
 // WiFi Settings
 const char *ssid = "Trimix_Analyser";  // WiFi SSID
@@ -294,6 +297,8 @@ void handleData() {
   String json = "{";
   json += "\"time\":\"" + formatTime() + "\",";
   json += "\"count\":\"" + String(avgSampleCount) + "\",";
+  json += "\"voc\":\"" + String(voc) + "\",";
+  json += "\"sgpRawCorr\":\"" + String(sgpRawCorr) + "\",";
   json += "\"oxygen\":\"" + String(getOxygenPercentage(), 1) + "\",";
   json += "\"helium\":\"" + String(heliumPercentage, 1) + "\",";
   json += "\"avgOxygenVoltage\":\"" + String(avgOxygenVoltage, 2) + "\",";
@@ -302,14 +307,15 @@ void handleData() {
   json += "\"mod16\":\"" + String(mod16) + "\",";
   json += "\"end\":\"" + String(end) + "\",";
   json += "\"density\":\"" + String(den, 1) + "\",";
-  json += "\"voc\":\"" + String(voc) + "\",";
-  json += "\"sgpRawCorr\":\"" + String(sgpRawCorr) + "\",";
+  json += "\"mod_cc\":\"" + String(mod_cc) + "\",";
+  json += "\"end_cc\":\"" + String(end_cc) + "\",";
+  json += "\"density_cc\":\"" + String(den_cc, 1) + "\",";
   json += "\"oxygencalVoltage\":\"" + String(oxygencalVoltage, 2) + "\",";
-  json += "\"OxygenCalPercentage\":\"" + String(OxygenCalPercentage) + "\",";
   json += "\"pureoxygenVoltage\":\"" + String(pureoxygenVoltage, 2) + "\",";
-  json += "\"HeliumCalPercentage\":\"" + String(HeliumCalPercentage) + "\",";
   json += "\"heliumcalVoltage\":\"" + String(heliumcalVoltage, 2) + "\",";
   json += "\"bestWiperValue\":\"" + String(bestWiperValue) + "\"";
+  json += "\"OxygenCalPercentage\":\"" + String(OxygenCalPercentage) + "\",";
+  json += "\"HeliumCalPercentage\":\"" + String(HeliumCalPercentage) + "\",";
   json += "}";
   server.send(200, "application/json", json);
 }
@@ -486,7 +492,7 @@ void setup() {
 
 void loop() {
   unsigned long currentTime = millis();
-  
+
   // HTML update
   server.handleClient();
 
@@ -506,6 +512,24 @@ void loop() {
   // Update cycle
   if (currentTime - lastDisplayUpdate >= (1000 / displayRateHz)) {
     lastDisplayUpdate = currentTime;
+
+    // Get Time
+    String elapsedTime = formatTime();
+
+    // Get Gas Quality, 0% humidity, 20 degree Celsius
+    voc = sgp40.getVOCindex(0, 20);    // VOC index
+    if (voc < 1) {
+      voc = 1;                         // VOC index minimum 1
+    } else if (voc > 500) {
+      voc = 500;                       // VOC index maximum 500
+    }
+    sgp40.measureRaw(&sgpRaw, 0, 20);  // Raw reading
+    if (sgpRaw < 20001) {
+      sgpRaw = 20001;                  // Raw reading minimum 20001
+    } else if (sgpRaw > 52767) {
+      sgpRaw = 52767;                  // Raw reading maximum 52767
+    }
+    sgpRawCorr = sgpRaw - 20000;       // Corrected range 1-32767
 
     // Calculate average voltages
     avgOxygenVoltage = (sampleCount > 0) ? (oxygenSum / sampleCount) : 0.0;
@@ -543,11 +567,19 @@ void loop() {
     if (mod16 > 999) {
       mod16 = 999;  // Maximum MOD allowed 999 m
     }
+    mod_cc = (oxygenPercentage > 0) ? (int)((1200.0 / oxygenPercentage) - 10.0) : 0;  // MOD at ppO2 1.2
+    if (mod_cc > 999) {
+      mod_cc = 999;  // Maximum MOD allowed 999 m
+    }
 
     // Calculate END
     end = (mod14 + 10.0) * (1 - heliumPercentage / 100.0) - 10.0;  // END at MOD 1.4
     if (end < 0) {
       end = 0;  // Minimum END allowed 0 m
+    }
+    end_cc = (mod_cc + 10.0) * (1 - heliumPercentage / 100.0) - 10.0;  // END at MOD 1.2
+    if (end_cc < 0) {
+      end_cc = 0;  // Minimum END allowed 0 m
     }
 
     // Calculate Density
@@ -555,23 +587,9 @@ void loop() {
     if (den > 99.9) {
       den = 99.9;  // Maximum density allowed 99.9 g/L
     }
-
-    // Get Time
-    String elapsedTime = formatTime();
-
-    // Get Gas Quality, 0% humidity, 20 degree Celsius
-    voc = sgp40.getVOCindex(0, 20);    // VOC index
-    if (voc < 1) {
-      voc = 1;                         // VOC index minimum 1
-    } else if (voc > 500) {
-      voc = 500;                       // VOC index maximum 500
+    den_cc = (oxygenPercentage * 0.1756 - heliumPercentage * 1.0582 + 123.46) * (mod_cc + 10) / 1000;  // Density at MOD 1.2
+    if (den_cc > 99.9) {
+      den_cc = 99.9;  // Maximum density allowed 99.9 g/L
     }
-    sgp40.measureRaw(&sgpRaw, 0, 20);  // Raw reading
-    if (sgpRaw < 20001) {
-      sgpRaw = 20001;                  // Raw reading minimum 20001
-    } else if (sgpRaw > 52767) {
-      sgpRaw = 52767;                  // Raw reading maximum 52767
-    }
-    sgpRawCorr = sgpRaw - 20000;       // Corrected range 1-32767
   }
 }

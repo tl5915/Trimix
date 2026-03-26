@@ -12,9 +12,9 @@
     h1 { font-size: 28px; margin: 0; padding: 6px; background-color: #43B02A; color: #F6EB14; }
     .small { font-size: 14px; color: #333; }
     .system-row { display: flex; justify-content: space-between; padding: 2px 12px; }
-    .big-gas { font-size: 70px; font-weight: bold; margin-top: 4px; }
+    .big-gas { font-size: 70px; font-weight: bold; margin-top: 0px; }
     .voltage { font-size: 18px; margin-top: -2px; color: #444; }
-    .section-title { font-size: 18px; margin-top: 20px; }
+    .section-title { font-size: 18px; margin: 20px 0 6px 0; }
     .data-block { font-size: 16px; margin-top: 0px; }
     .cal-block { font-size: 14px; margin-top: 0px; line-height: 1.4; }
     button { padding: 8px 16px; margin-top: 4px; font-size: 16px; }
@@ -45,8 +45,8 @@
     He: <span id="correctedHeliumVoltage">0.0</span> mV
   </div>
 
-  <!-- Gas Caluclation -->
-  <h2 class="section-title">Gas Caluclation</h2>
+  <!-- OC Gas Caluclation -->
+  <h2 class="section-title">OC Gas Caluclation</h2>
   <div class="data-block">
     MOD (ppO2 1.4): <span id="mod14">0</span> m<br>
     MOD (ppO2 1.6): <span id="mod16">0</span> m<br>
@@ -54,8 +54,16 @@
     Density (@ 1.4 MOD): <span id="density">0</span> g/L
   </div>
 
-  <!-- Calibration Data -->
-  <h2 class="section-title">Calibration Data</h2>
+  <!-- CC Gas Caluclation -->
+  <h2 class="section-title">CC Gas Caluclation</h2>
+  <div class="data-block">
+    MOD (ppO2 1.2): <span id="mod_cc">0</span> m<br>
+    END (@ 1.2 MOD): <span id="end_cc">0</span> m<br>
+    Density (@ 1.2 MOD): <span id="density_cc">0</span> g/L
+  </div>
+
+  <!-- Calibration -->
+  <h2 class="section-title">Calibration</h2>
   <div class="cal-block">
     Air O2 Cal Voltage: <span id="oxygencalVoltage">0.0</span> mV<br>
     O2 Cal Percentage: <span id="oxygenCalPercentageText">0</span>%<br>
@@ -66,7 +74,7 @@
   </div>
 
   <!-- Calibration Buttons -->
-  <div style="margin-top: 10px; display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+  <div style="margin-top: 10px; display: flex; justify-content: center; column-gap: 40px; row-gap: 10px; flex-wrap: wrap;">
     <button onclick="calibrate('airOxygen')">Cal. Air O2</button>
     <button onclick="calibrate('pureOxygen')">Cal. High O2</button>
     <button onclick="calibrate('airHelium')">Cal. Air He</button>
