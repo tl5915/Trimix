@@ -1,3 +1,4 @@
+#include <Arduino.h>
 // OTA Libraries
 #include <FS.h>
 #include <SPIFFS.h>
