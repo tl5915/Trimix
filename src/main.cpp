@@ -16,13 +16,13 @@
 #include <sensirion_voc_algorithm.h>
 #include <SparkFun_SGP40_Arduino_Library.h>
 // HTML pages
-#include "html/htmlPage.h"
-#include "html/settingsPage.h"
-#include "html/oxygenPercentagePage.h"
-#include "html/heliumPercentagePage.h"
-#include "html/heliumPolarityPage.h"
-#include "html/firmwarePage.h"
-#include "html/uploadPage.h"
+#include "htmlPage.h"
+#include "settingsPage.h"
+#include "oxygenPercentagePage.h"
+#include "heliumPercentagePage.h"
+#include "heliumPolarityPage.h"
+#include "firmwarePage.h"
+#include "uploadPage.h"
 
 // Firmware Version
 #define FIRMWARE_VERSION 1.1
