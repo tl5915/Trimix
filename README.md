@@ -3,51 +3,53 @@ Gas thermo conductivity based trimix analyser. No internal battery, powered via 
 
 ## Principles ##
 ### Oxygen ###
-Galvenic O2 cell outputs voltage roughly between 8 to 70mV. This is read by ADS1115 16 bit analog-to-digital converter, with PGA gain set to 16 (256mV range). Rebreather O2 cells contains load resistor, no external load resistor required.
+- Galvenic O2 cell outputs voltage roughly between 8 to 70mV. This is read by ADS1115 16 bit analog-to-digital converter, with PGA gain set to 16 (256mV range). - Rebreather O2 cells contains load resistor, no external load resistor required.
 ### Helium ###
-MD62 is a thermo conductivity CO2 sensor, but could also measure gases with thermo conductivity lower than air, ie helium. The sensor contains 2 pairs of temperature-sensitive resistors, one enclosed in known gas (compensation side), one exposed to enviroment (measurement side). Apply voltage to heat up the resistors, heat will desipate quicker in measurement side when exposed to helium, changing resistance. The subtle difference in resistance between the two resistors is measured by a balanced wheastone bridge.
-Manufacturer specification for power supply is 3.0 +/- 0.1V (attached datasheet is outdated and wrong). 3.3V power supply passing through a 1N5819 Schottky diode give just the right amount of forward voltage drop to get 2.9V. Do not use the MCU's internal 3.3V power supply, use external supply: MD62 can can drain up to 200mA.
-Wheastone bridge build contains two 2k ohm resistors, and a 500 ohm potentiometer to adjust bridge balance. I use a DS3502 digital potentiometer (10k ohm), parallel connect to 510 ohm resistor to drop total resistence to 485 ohm. Bridge voltage is read between the centre pins of MD62 and DS3502 wiper, by ADS1115, with PGA gain set to 4 (1024mV range). Maximum voltage I have seen with pure helium is around 600mV so well within range.
-Flow rate matters for thermal conductivity sensors: quickly the gas flow, quicker heat got taken away from the sensor. Ideal flow rate 0.5 to 2L/min. BCD inflator nipple to 1/4 NPT male adaptor has the perfect inner diameter to tap 3/8 UNF thread, so a low pressure port blank plug without o ring can be installed, and flow rate can be adjusted by how tight it is. Low pressure constant flow gas exit via hose barb to 1/4 NPT female adaptor. Several try and errors required to set the flow rate.
+- MD62 is a thermo conductivity CO2 sensor, but could also measure gases with thermo conductivity lower than air, ie helium. The sensor contains 2 pairs of temperature-sensitive resistors, one enclosed in known gas (compensation side), one exposed to enviroment (measurement side). Apply voltage to heat up the resistors, heat will desipate quicker in measurement side when exposed to helium, changing resistance. The subtle difference in resistance between the two resistors is measured by a balanced wheastone bridge.
+- Manufacturer specification for power supply is 3.0 +/- 0.1V (attached datasheet is outdated and wrong). 3.3V power supply passing through a 1N5819 Schottky diode give just the right amount of forward voltage drop to get 2.9V. Do not use the MCU's internal 3.3V power supply, use external supply: MD62 can can drain up to 200mA.
+- Wheastone bridge build contains two 2k ohm resistors, and a 500 ohm potentiometer to adjust bridge balance. I use a DS3502 digital potentiometer (10k ohm), parallel connect to 510 ohm resistor to drop total resistence to 485 ohm. Bridge voltage is read between the centre pins of MD62 and DS3502 wiper, by ADS1115, with PGA gain set to 4 (1024mV range). Maximum voltage I have seen with pure helium is around 600mV so well within range.
+- Flow rate matters for thermal conductivity sensors: quickly the gas flow, quicker heat got taken away from the sensor. Ideal flow rate 0.5 to 2L/min. BCD inflator nipple to 1/4 NPT male adaptor has the perfect inner diameter to tap 3/8 UNF thread, so a low pressure port blank plug without o ring can be installed, and flow rate can be adjusted by how tight it is. Low pressure constant flow gas exit via hose barb to 1/4 NPT female adaptor. Several try and errors required to set the flow rate.
 ### Gas quality ###
-I couldn't find any small enough carbon monoxide sensor, so opted for SGP40. SGP40 is a VOC sensor, but also cross react with carbon monoxide. This might be a better option, because the sources of CO found in cylinder are usually o ring combustion, or generator/engine fume, both containing VOC.
-The sensor read out if not quantitantive, but relative. Turn on in air, reading should stablise around 50 to 100, if reading in analysed gas goes up -> bad, otherwise lower the number the better. Raw sensor resistance also provided on the UI for reference (higher the better, VOC and CO reduce resistance).
+- I couldn't find any small enough carbon monoxide sensor, so opted for SGP40. SGP40 is a VOC sensor, but also cross react with carbon monoxide. This might be a better option, because the sources of CO found in cylinder are usually o ring combustion, or generator/engine fume, both containing VOC.
+- The sensor read out if not quantitantive, but relative. Turn on in air, reading should stablise around 50 to 100, if reading in analysed gas goes up -> bad, otherwise lower the number the better. Raw sensor resistance also provided on the UI for reference (higher the better, VOC and CO reduce resistance).
 ### Coomunication ###
-All peripheries (ADS1115, DS3502, SGP40) are connected to Adafruit QT Py ESP32-C3 through I2C, via the Stemma QT connector. ESP32-C3 wifi is set to AP hotspot mode, connect to the wifi and read/calibrate via html.
+- All peripheries (ADS1115, DS3502, SGP40) are connected to Adafruit QT Py ESP32-C3 through I2C, via the Stemma QT connector.
+- ESP32-C3 wifi is set to AP hotspot mode, connect to the wifi and read/calibrate via html.
 ### Power ###
-USB-C panel mount connects to VCC and GND on QT Py ESP32-C3 for 5V USB power. Alternatively MagSafe receiver connects to the USB-C port on QT Py ESP32-C3 for wireless 5V power.
+- USB-C panel mount connects to VCC and GND on QT Py ESP32-C3 for 5V USB power.
+- Alternatively MagSafe receiver connects to the USB-C port on QT Py ESP32-C3 for wireless 5V power.
 
 ## Material ##
-1. Housing to be 3D printed in STL folder
+- Housing to be 3D printed in STL folder
 (optional M16 x 1.0 tap to smooth out O2 connector tube)
-2. BCD nipple to 1.4 NPT male convertor (gas in)
+- BCD nipple to 1.4 NPT male convertor (gas in)
 (https://ebay.us/m/m2sN6S)
-3. 3/8 UNF tap (tap on the NPT side of the above convertor to mount a o-ring-removed LP blanking plug to adjust flow rate to 1 L/min)
+- 3/8 UNF tap (tap on the NPT side of the above convertor to mount a o-ring-removed LP blanking plug to adjust flow rate to 1 L/min)
 (https://amzn.eu/d/0449Hkix)
-4. 1/4 NPT female to the smallest hose barb you can find, use barb convertor if necessary (ideally 2 mm ID silicone tubing connect to sensor chamber)
+- 1/4 NPT female to the smallest hose barb you can find, use barb convertor if necessary (ideally 2 mm ID silicone tubing connect to sensor chamber)
 (https://ebay.us/m/jr4HbL)
-5. Oxygen cell, any type (molex, 3.5mm jack, coaxial), choose connector accordingly
-6. Wisen MD62 CO2 sensor
-7. 5V to 3.3V buck converter
+- Oxygen cell, any type (molex, 3.5mm jack, coaxial), choose connector accordingly
+- Wisen MD62 CO2 sensor
+- 5V to 3.3V buck converter
 (https://amzn.eu/d/0gPikEVZ)
-8. 1N5819 Schottky diode (drops the 3.3v to 3.0v that MD62 requires)
-9. DS3502 digital potentiometer (10k ohm), parallel connect to 510 ohm resistor to drop total resistence to 485 ohm
+- 1N5819 Schottky diode (drops the 3.3v to 3.0v that MD62 requires)
+- DS3502 digital potentiometer (10k ohm), parallel connect to 510 ohm resistor to drop total resistence to 485 ohm
 (https://amzn.eu/d/0adkxJX8)
-10. 2k ohm resistors for MD62 wheastone bridge
-11. SGP40 gas sensor
+- 2k ohm resistors for MD62 wheastone bridge
+- SGP40 gas sensor
 (https://amzn.eu/d/06vTv9tU)
-12. M2 screw to secure SGP40 onto sensor tube
-13. JST-SH 1.0 4 terminal connectors for Stemma QT
+- M2 screw to secure SGP40 onto sensor tube
+- JST-SH 1.0 4 terminal connectors for Stemma QT
 (https://amzn.eu/d/09DHS9cc)
-14. Adafruit ADS1115 ADC
+- Adafruit ADS1115 ADC
 (https://ebay.us/m/z7J8pF)
-15. Adafruit QT Py ESP32-C3
-16. USB-C panel mount
+- Adafruit QT Py ESP32-C3
+- USB-C panel mount
 (https://amzn.eu/d/07lMHozl)
-17. JST-XH 2.54 2 terminal connectors for power
-18. Qi wireless charging receiver unit
+- JST-XH 2.54 2 terminal connectors for power
+- Qi wireless charging receiver unit
 (https://amzn.eu/d/08BN3vmo)
-19. MagSafe ring
+- MagSafe ring
 (https://amzn.eu/d/02FF3lX3)
 
 ## Circuit connection ##
