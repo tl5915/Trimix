@@ -1,7 +1,3 @@
-#include <pgmspace.h>
-#pragma once
-
-const char firmwarePage[] PROGMEM = R"HTML(
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +11,7 @@ const char firmwarePage[] PROGMEM = R"HTML(
 <body>
   <h1>Firmware Update</h1>
   <p style="font-size:16px; margin-bottom:12px;">
-    Current version: )rawliteral" TOSTRING(FIRMWARE_VERSION) R"rawliteral(
+    Current version: {{FIRMWARE_VERSION}}
   </p>
   <form id="uploadForm" method="POST" action="/update" enctype="multipart/form-data" onsubmit="return checkFile();">
     <input type="file" name="firmware" id="fileInput" accept=".bin" required>
@@ -73,7 +69,6 @@ const char firmwarePage[] PROGMEM = R"HTML(
       xhr.open("POST", "/update", true);
       xhr.send(formData);
     }
-  </script> 
+  </script>
 </body>
 </html>
-)HTML";

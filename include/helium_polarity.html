@@ -1,11 +1,7 @@
-#include <pgmspace.h>
-#pragma once
-
-const char heliumPercentagePage[] PROGMEM = R"HTML(
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Helium Calibration Percentage</title>
+  <title>Helium Polarity</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; background-color: #f4f4f4; }
@@ -19,14 +15,14 @@ const char heliumPercentagePage[] PROGMEM = R"HTML(
   </style>
 </head>
 <body>
-  <h1>Helium Calibration Percentage</h1>
+  <h1>Helium Polarity</h1>
   <div class="container">
     <div class="group">
-      <h2>Helium Calibration Percentage</h2>
-      <form action="/save_helium" method="GET">
+      <h2>Helium Polarity</h2>
+      <form action="/save_polarity" method="GET">
         <div class="info">
-          <label for="HeliumCalPercentage">He Calibration Percentage:</label>
-          <input type="number" id="HeliumCalPercentage" name="HeliumCalPercentage" min="30" max="99" value="99">
+          <label for="HeliumPolarity">He Polarity:</label>
+          <input type="number" id="HeliumPolarity" name="HeliumPolarity" min="0" max="1" value="0">
         </div>
         <div class="info">
           <button type="submit">Save</button>
@@ -36,4 +32,3 @@ const char heliumPercentagePage[] PROGMEM = R"HTML(
   </div>
 </body>
 </html>
-)HTML";

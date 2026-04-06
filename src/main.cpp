@@ -16,13 +16,7 @@
 #include <sensirion_voc_algorithm.h>
 #include <SparkFun_SGP40_Arduino_Library.h>
 // HTML pages
-#include "htmlPage.h"
-#include "settingsPage.h"
-#include "oxygenPercentagePage.h"
-#include "heliumPercentagePage.h"
-#include "heliumPolarityPage.h"
-#include "firmwarePage.h"
-#include "uploadPage.h"
+#include "webPages.h"
 
 // Firmware Version
 #define FIRMWARE_VERSION 1.1
@@ -48,6 +42,10 @@ const int ADDR_HELIUM_CAL_PERCENTAGE = 12;
 const int ADDR_OXYGEN_CAL_VOLTAGE = 16;
 const int ADDR_PURE_OXYGEN_VOLTAGE = 24;
 const int ADDR_HELIUM_CAL_VOLTAGE = 32;
+
+// SPIFFS
+size_t iconUploadBytes = 0;
+bool iconUploadValid = true;
 
 // Calibration
 const uint8_t defaultwiperValue = 58;           // Potentiometer wiper position
@@ -363,12 +361,45 @@ void handleOTAFinish() {
 void handleUpload() {
   HTTPUpload& upload = server.upload();
   if (upload.status == UPLOAD_FILE_START) {
-    String filename = "/" + upload.filename;
-    fsUploadFile = SPIFFS.open(filename, FILE_WRITE);
+    iconUploadBytes = 0;
+    iconUploadValid = true;
+    if (SPIFFS.exists("/icon.png")) {
+      SPIFFS.remove("/icon.png");
+    }
+    fsUploadFile = SPIFFS.open("/icon.png", FILE_WRITE);
+    if (!fsUploadFile) {
+      iconUploadValid = false;
+    }
   } else if (upload.status == UPLOAD_FILE_WRITE) {
-    if (fsUploadFile) fsUploadFile.write(upload.buf, upload.currentSize);
+    if (!iconUploadValid || !fsUploadFile) {
+      return;
+    }
+    iconUploadBytes += upload.currentSize;
+    if (iconUploadBytes > (20 * 1024)) {
+      iconUploadValid = false;
+      fsUploadFile.close();
+      SPIFFS.remove("/icon.png");
+      return;
+    }
+    if (fsUploadFile.write(upload.buf, upload.currentSize) != upload.currentSize) {
+      iconUploadValid = false;
+      fsUploadFile.close();
+      SPIFFS.remove("/icon.png");
+    }
   } else if (upload.status == UPLOAD_FILE_END) {
-    if (fsUploadFile) fsUploadFile.close();
+    if (fsUploadFile) {
+      fsUploadFile.close();
+    }
+    if (iconUploadBytes == 0) {
+      iconUploadValid = false;
+      SPIFFS.remove("/icon.png");
+    }
+  } else if (upload.status == UPLOAD_FILE_ABORTED) {
+    iconUploadValid = false;
+    if (fsUploadFile) {
+      fsUploadFile.close();
+    }
+    SPIFFS.remove("/icon.png");
   }
 }
 
@@ -429,7 +460,7 @@ void setup() {
 
   server.serveStatic("/icon.png", SPIFFS, "/icon.png");
   server.on("/", []() {
-    server.send(200, "text/html", htmlPage);
+    WebPages::sendHtmlFile(server, "/main.html");
   });
   server.on("/data", handleData);
   server.on("/calibrate_oxygen_air", []() {
@@ -453,16 +484,16 @@ void setup() {
       "<html><body><h1>He High Calibrated</h1></body></html>");
   });
   server.on("/settings", []() {
-    server.send(200, "text/html", settingsPage);
+    WebPages::sendHtmlFile(server, "/settings.html");
   });
   server.on("/oxygen_percentage", []() {
-    server.send(200, "text/html", oxygenPercentagePage);
+    WebPages::sendHtmlFile(server, "/oxygen_percentage.html");
   });
   server.on("/helium_percentage", []() {
-    server.send(200, "text/html", heliumPercentagePage);
+    WebPages::sendHtmlFile(server, "/helium_percentage.html");
   });
   server.on("/helium_polarity", []() {
-    server.send(200, "text/html", heliumPolarityPage);
+    WebPages::sendHtmlFile(server, "/helium_polarity.html");
   });
   server.on("/save_oxygen", HTTP_GET, setOxygenCalibration);
   server.on("/save_helium", HTTP_GET, setHeliumCalibration);
@@ -470,21 +501,32 @@ void setup() {
   server.on("/reset_calibration", HTTP_GET, resetToDefaultCalibration);
   // Link not exposed, manually input URL: http://192.168.4.1/upload_page
   server.on("/upload_page", HTTP_GET, []() {
-    server.send(200, "text/html", uploadPage);
+    WebPages::sendHtmlFile(server, "/upload.html");
   });
   server.on("/upload", HTTP_POST,
     []() {
-      server.send(200, "text/html",
-        "<html><body>"
-          "<h1>Upload Successful</h1>"
-          "<p><a href=\"/settings\">Back to Settings</a></p>"
-        "</body></html>"
-      );
+      if (iconUploadValid) {
+        server.send(200, "text/html",
+          "<html><body>"
+            "<h1>Icon Upload Successful</h1>"
+            "<p>icon.png was updated.</p>"
+            "<p><a href=\"/\">Back to Main</a></p>"
+          "</body></html>"
+        );
+      } else {
+        server.send(400, "text/html",
+          "<html><body>"
+            "<h1>Icon Upload Failed</h1>"
+            "<p>Please use a PNG file up to 20KB.</p>"
+            "<p><a href=\"/upload_page\">Try Again</a></p>"
+          "</body></html>"
+        );
+      }
     },
     handleUpload
   );
   server.on("/firmware", HTTP_GET, []() {
-    server.send(200, "text/html", firmwarePage);
+    WebPages::sendFirmwarePage(server, TOSTRING(FIRMWARE_VERSION));
   });
   server.on("/update", HTTP_POST, handleOTAFinish, handleOTAUpload);
   server.begin();
